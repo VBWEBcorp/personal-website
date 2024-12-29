@@ -1,5 +1,8 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { storage } from '../config/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import Image from 'next/image';
 
 const categories = [
   "Toutes",
@@ -11,6 +14,20 @@ const categories = [
 ];
 
 const galleryItems = [
+  {
+    id: 'boat-on-logo',
+    src: '/images/boat-on-logo.png',
+    alt: 'Boat On Beach Club Logo',
+    category: 'mariage',
+    title: 'Logo Boat On Beach Club'
+  },
+  {
+    id: 'vbweb-logo',
+    src: '/images/vbweb-caraibes.png',
+    alt: 'VB Web Caraibes Logo',
+    category: 'mariage',
+    title: 'VB Web Caraibes'
+  },
   {
     id: 1,
     title: "Dîner Vue Mer",
@@ -83,13 +100,69 @@ const galleryItems = [
   }
 ];
 
+const ImageUploader = ({ onImageUploaded }) => {
+  const [uploading, setUploading] = useState(false);
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      // Créer une référence unique pour l'image
+      const imageRef = ref(storage, `gallery/mariages/${Date.now()}-${file.name}`);
+      
+      // Upload vers Firebase
+      await uploadBytes(imageRef, file);
+      
+      // Obtenir l'URL
+      const url = await getDownloadURL(imageRef);
+      
+      // Ajouter à la galerie
+      onImageUploaded({
+        id: Date.now().toString(),
+        src: url,
+        alt: file.name,
+        category: 'mariage',
+        title: 'Nouvelle image de mariage'
+      });
+    } catch (error) {
+      console.error('Erreur upload:', error);
+    }
+    setUploading(false);
+  };
+
+  return (
+    <div className="mb-4">
+      <input
+        type="file"
+        accept="image/*"
+        onChange={handleImageUpload}
+        className="hidden"
+        id="image-upload"
+      />
+      <label
+        htmlFor="image-upload"
+        className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+      >
+        {uploading ? 'Upload en cours...' : 'Ajouter une image'}
+      </label>
+    </div>
+  );
+};
+
 export default function Gallery() {
   const [selectedCategory, setSelectedCategory] = useState("Toutes");
   const [selectedImage, setSelectedImage] = useState(null);
+  const [images, setImages] = useState(galleryItems);
 
   const filteredItems = selectedCategory === "Toutes"
-    ? galleryItems
-    : galleryItems.filter(item => item.category === selectedCategory);
+    ? images
+    : images.filter(item => item.category === selectedCategory);
+
+  const handleNewImage = (newImage) => {
+    setImages(prev => [newImage, ...prev]);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 py-16 px-4 sm:px-6 lg:px-8">
@@ -106,6 +179,7 @@ export default function Gallery() {
           <p className="text-xl text-gray-300">
             Des moments magiques en bord de mer
           </p>
+          <ImageUploader onImageUploaded={handleNewImage} />
         </motion.div>
 
         {/* Categories */}
@@ -143,7 +217,7 @@ export default function Gallery() {
             >
               <div className="relative pb-[75%]">
                 <img
-                  src={item.image}
+                  src={item.image || item.src}
                   alt={item.title}
                   className="absolute inset-0 w-full h-full object-cover"
                 />
@@ -174,7 +248,7 @@ export default function Gallery() {
               onClick={e => e.stopPropagation()}
             >
               <img
-                src={selectedImage.image}
+                src={selectedImage.image || selectedImage.src}
                 alt={selectedImage.title}
                 className="w-full h-[600px] object-cover"
               />
