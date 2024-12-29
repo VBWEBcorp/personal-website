@@ -16,14 +16,14 @@ const categories = [
 const galleryItems = [
   {
     id: 'boat-on-logo',
-    src: '/images/boat-on-logo.png',
+    image: 'https://raw.githubusercontent.com/VBWEBcorp/showcase-dashboard/master/public/images/boat-on-logo.png',
     alt: 'Boat On Beach Club Logo',
     category: 'mariage',
     title: 'Logo Boat On Beach Club'
   },
   {
     id: 'vbweb-logo',
-    src: '/images/vbweb-caraibes.png',
+    image: 'https://raw.githubusercontent.com/VBWEBcorp/showcase-dashboard/master/public/images/vbweb-caraibes.png',
     alt: 'VB Web Caraibes Logo',
     category: 'mariage',
     title: 'VB Web Caraibes'
