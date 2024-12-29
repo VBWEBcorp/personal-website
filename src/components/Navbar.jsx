@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const router = useRouter();
+  const location = useLocation();
   const { currentUser, logout } = useAuth();
 
   const navigation = [
@@ -18,7 +17,7 @@ export default function Navbar() {
   const handleLogout = async () => {
     try {
       await logout();
-      router.push('/login');
+      // Redirection will be handled by router
     } catch (error) {
       console.error('Error logging out:', error);
     }
@@ -29,7 +28,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <Link href="/" className="text-white font-bold text-xl">
+            <Link to="/" className="text-white font-bold text-xl">
               Boat On
             </Link>
           </div>
@@ -40,9 +39,9 @@ export default function Navbar() {
               {navigation.map((item) => (
                 <Link
                   key={item.name}
-                  href={item.href}
+                  to={item.href}
                   className={`${
-                    router.pathname === item.href
+                    location.pathname === item.href
                       ? 'bg-gray-800 text-white'
                       : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                   } px-3 py-2 rounded-md text-sm font-medium`}
@@ -111,9 +110,9 @@ export default function Navbar() {
             {navigation.map((item) => (
               <Link
                 key={item.name}
-                href={item.href}
+                to={item.href}
                 className={`${
-                  router.pathname === item.href
+                  location.pathname === item.href
                     ? 'bg-gray-800 text-white'
                     : 'text-gray-300 hover:bg-gray-700 hover:text-white'
                 } block px-3 py-2 rounded-md text-base font-medium`}
