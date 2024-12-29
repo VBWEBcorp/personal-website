@@ -1,29 +1,27 @@
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { storage } from '../config/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Image from 'next/image';
 
 const categories = [
   "Toutes",
-  "Mariages",
-  "Réceptions",
   "Vue Mer",
-  "Décorations",
-  "Saisonnières"
+  "Mariage",
+  "Réception"
 ];
 
 const galleryItems = [
   {
     id: 'boat-on-logo',
-    image: 'https://raw.githubusercontent.com/VBWEBcorp/showcase-dashboard/master/public/images/boat-on-logo.png',
+    image: '',  // Will be populated from Firebase
     alt: 'Boat On Beach Club Logo',
     category: 'mariage',
     title: 'Logo Boat On Beach Club'
   },
   {
     id: 'vbweb-logo',
-    image: 'https://raw.githubusercontent.com/VBWEBcorp/showcase-dashboard/master/public/images/vbweb-caraibes.png',
+    image: '',  // Will be populated from Firebase
     alt: 'VB Web Caraibes Logo',
     category: 'mariage',
     title: 'VB Web Caraibes'
@@ -110,7 +108,7 @@ const ImageUploader = ({ onImageUploaded }) => {
     setUploading(true);
     try {
       // Créer une référence unique pour l'image
-      const imageRef = ref(storage, `gallery/mariages/${Date.now()}-${file.name}`);
+      const imageRef = ref(storage, `gallery/${Date.now()}-${file.name}`);
       
       // Upload vers Firebase
       await uploadBytes(imageRef, file);
@@ -155,6 +153,43 @@ export default function Gallery() {
   const [selectedCategory, setSelectedCategory] = useState("Toutes");
   const [selectedImage, setSelectedImage] = useState(null);
   const [images, setImages] = useState(galleryItems);
+
+  useEffect(() => {
+    // Charger les images depuis Firebase Storage
+    const loadImages = async () => {
+      const updatedImages = await Promise.all(
+        galleryItems.map(async (item) => {
+          if (item.id === 'boat-on-logo' || item.id === 'vbweb-logo') {
+            const imageRef = ref(storage, `gallery/${item.id}.png`);
+            try {
+              const url = await getDownloadURL(imageRef);
+              return { ...item, image: url };
+            } catch (error) {
+              console.error(`Error loading image ${item.id}:`, error);
+              return item;
+            }
+          }
+          return item;
+        })
+      );
+      setImages(updatedImages);
+    };
+
+    loadImages();
+  }, []);
+
+  // Upload function
+  const uploadImage = async (file, imageName) => {
+    const imageRef = ref(storage, `gallery/${imageName}.png`);
+    try {
+      await uploadBytes(imageRef, file);
+      const url = await getDownloadURL(imageRef);
+      return url;
+    } catch (error) {
+      console.error('Error uploading:', error);
+      return null;
+    }
+  };
 
   const filteredItems = selectedCategory === "Toutes"
     ? images
